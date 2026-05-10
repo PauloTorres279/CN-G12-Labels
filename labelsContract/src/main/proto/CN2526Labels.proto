@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "cn.labels.contract";
+option java_outer_classname = "CN2526LabelsProto";
+
+package cn2526labels;
+
+service LabelsService{
+    rpc submitImage(stream imageBlock) returns (imageRequestId);
+    rpc imageInfo(imageInfoRequest) returns (imageInfoReply);
+    rpc namesByDate(namesByDateRequest) returns (namesByDateReply);
+}
+
+service ElasticityReply{
+    rpc changeInstances(resizeRequest) returns (resizeReply);
+    rpc changeInstancesForImages(resizeImagesRequest) returns (resizeImagesReply);
+}
+
+message imageBlock{
+    string fileName = 1;
+    string contentType = 2;
+    bytes data = 3;
+}
+
+message imageRequestId{
+    string requestId = 1;
+    string message = 2;
+}
+
+message imageInfoRequest{
+  string requestId = 1;
+}
+
+message imageInfoReply{
+
+}
