@@ -14,7 +14,7 @@ service LabelsService{
 
 service ElasticityReply{
     rpc changeInstances(resizeRequest) returns (resizeReply);
-    rpc changeInstancesForImages(resizeImagesRequest) returns (resizeImagesReply);
+    rpc changeInstancesForImages(resizeRequest) returns (resizeReply);
 }
 
 message imageBlock{
@@ -32,6 +32,54 @@ message imageInfoRequest{
   string requestId = 1;
 }
 
-message imageInfoReply{
+message LabelInfo{
+    string labelEn = 1;
+    string labelPt = 2;
+    float confidence = 3;
+}
 
+message imageInfoReply{
+    string requestId = 1;
+    string fileName = 2;
+    string bucketName = 3;
+    string blobName = 4;
+
+    string status = 5;
+
+    string submittedAt = 6;
+    string processedAt = 7;
+
+    repeated LabelInfo labels = 8;
+    string errorMessage = 9;
+}
+
+message namesByDateRequest{
+    string label = 1;
+    string startDate = 2;
+    string endDate = 3;
+}
+
+message ImageSummary{
+    string requestId = 1;
+    string fileName = 2;
+    string bucketName = 3;
+    string blobName = 4;
+    string processedAt = 5;
+    repeated LabelInfo labels = 6;
+}
+
+message namesByDateReply{
+    repeated ImageSummary images = 1;
+}
+
+message resizeRequest{
+    string projectId = 1;
+    string zone = 2;
+    string instanceGroupName = 3;
+    int32 newSize = 4;
+}
+
+message resizeReply{
+    bool success = 1;
+    string message = 2;
 }

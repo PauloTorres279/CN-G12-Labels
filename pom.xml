@@ -12,7 +12,7 @@
         <module>labelsContract</module>
         <module>labelsServer</module>
         <module>labelsClient</module>
-        <module>labelsWorker</module>
+        <module>labelsApp</module>
     </modules>
 
     <properties>
