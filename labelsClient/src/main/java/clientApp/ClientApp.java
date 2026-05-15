@@ -1,12 +1,11 @@
 package clientApp;
 
-import cn.labels.contract.ElasticityReplyGrpc;
-import cn.labels.contract.LabelsServiceGrpc;
-import com.google.protobuf.compiler.PluginProtos;
+import cn.labels.contract.*;
+import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.stub.StreamObserver;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Scanner;
@@ -17,7 +16,7 @@ public class ClientApp {
     private static int svcPort = 8000;
 
     private static LabelsServiceGrpc.LabelsServiceBlockingStub blockingStub;
-    private static LabelsServiceGrpc.LabelsServiceStub noBlockStub;
+    private static LabelsServiceGrpc.LabelsServiceStub noBlockStub; //usar para chamadas em que o cliente não fica à espera da resposta imediatamente
 
     static void main(String[] args) {
         try {
@@ -47,9 +46,9 @@ public class ClientApp {
                         case 1 :
                             submitImage(scanner); break;
                         case 2 :
-                            unsubscribe(username); break;
+                            imageInfo(scanner); break;
                         case 3 :
-                            publish(username); break;
+                            namesByDate(scanner); break;
                         case 4 :
                             listTopics(); break;
                         case 99 :
@@ -98,7 +97,109 @@ public class ClientApp {
             if(!Files.exists(path))
                 System.out.println("Ficheiro não encontrado!");
 
+            StreamObserver<imageReply> responseObserver = new StreamObserver<>() {
+                @Override
+                public void onNext(imageReply reply) {
+                    System.out.println("Bloco submetido com sucesso.");
+                    System.out.println("ID do pedido: " + reply.getRequestId());
+                    System.out.println("Mensagem: " + reply.getMessage());
+                }
+
+                @Override
+                public void onError(Throwable t) {
+                    System.out.println("Erro na submissão da imagem: " + t.getMessage());
+                }
+
+                @Override
+                public void onCompleted() {
+                    System.out.println("Envio terminado");
+                }
+            }; //definição do que fazer quando o servidor me responder
+
+            //criação de um stream para se poder enviar blocos de imagem. Com o responseObserver já se sabe o que fazer quando o servidor responder
+            StreamObserver<imageBlock> requestObserver = noBlockStub.submitImage(responseObserver);
+
+            byte[] allImageBytes = Files.readAllBytes(path); //transformar a imagem num array de bytes
+            int blockSize = 64*1024; //blocos de 64KB
+            String fileName = path.getFileName().toString();
+
+            for(int actSize = 0; actSize < allImageBytes.length; actSize += blockSize){
+                int length = Math.min(blockSize, allImageBytes.length - actSize); //caso o último bloco tenha menos de 64KB
+
+                imageBlock block = imageBlock.newBuilder()
+                        .setFileName(fileName)
+                        .setData(ByteString.copyFrom(allImageBytes, actSize, length))//copiar X bytes para o imageBlock
+                        .build();
+                requestObserver.onNext(block);
+            }
+
+            requestObserver.onCompleted();
 
         }
+        catch (Exception e) {
+            System.out.println("Erro no envio da imagem: " + e.getMessage());
+        }
+
     }
+
+    private static void imageInfo(Scanner sc){
+        try{
+            System.out.println("ID do pedido: ");
+            String requestID = sc.nextLine();
+
+            imageInfoRequest request = imageInfoRequest.newBuilder() //definir a mensagem a ser enviada ao servidor, com o requestId
+                    .setRequestId(requestID)
+                    .build();
+
+            imageInfoReply reply = blockingStub.imageInfo(request); //obter a resposta desejada
+
+            System.out.println("Informações acerca da imagem recebida: ");
+            System.out.println("ID do pedido: " + reply.getRequestId());
+            System.out.println("Nome do ficheiro: " + reply.getFileName());
+            System.out.println("Nome do bucket: " + reply.getBucketName());
+            System.out.println("Nome do blob: " + reply.getBlobName());
+            System.out.println("Data de processamento da imagem: " + reply.getProcessedAt());
+
+            if(!reply.getErrorMessage().isEmpty())
+                System.out.println("Erro: " + reply.getErrorMessage());
+
+            System.out.println("Labels: ");
+            for(LabelInfo label : reply.getLabelsList()){
+                System.out.println("Label em inglês: " + label.getLabelEn() + " - Label em português: " + label.getLabelPt() + " - Nível de confiança: " + label.getConfidence());
+            }
+        }
+        catch (Exception e){
+            System.out.println("Erro na obtenção de informações: " + e.getMessage());
+        }
+    }
+
+    private static void namesByDate(Scanner sc){
+        try{
+            System.out.println("Label a pesquisar: ");
+            String label = sc.nextLine();
+
+            System.out.println("Data de início: ");
+            String startDate = sc.nextLine();
+
+            System.out.println("Data de fim: ");
+            String endDate = sc.nextLine();
+
+            namesByDateRequest request = namesByDateRequest.newBuilder()
+                    .setLabel(label)
+                    .setStartDate(startDate)
+                    .setEndDate(endDate)
+                    .build();
+
+            namesByDateReply reply = blockingStub.namesByDate(request);
+
+            System.out.println("Ficheiros armazenados no sistema:");
+            for(ImageSummary is : reply.getImagesList()){
+                System.out.println("");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Erro: " + e.getMessage());
+        }
+    }
+
 }

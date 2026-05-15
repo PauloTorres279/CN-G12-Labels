@@ -7,7 +7,7 @@ option java_outer_classname = "CN2526LabelsProto";
 package cn2526labels;
 
 service LabelsService{
-    rpc submitImage(stream imageBlock) returns (imageRequestId);
+    rpc submitImage(stream imageBlock) returns (imageReply);
     rpc imageInfo(imageInfoRequest) returns (imageInfoReply);
     rpc namesByDate(namesByDateRequest) returns (namesByDateReply);
 }
@@ -23,7 +23,7 @@ message imageBlock{
     bytes data = 3;
 }
 
-message imageRequestId{
+message imageReply{
     string requestId = 1;
     string message = 2;
 }
