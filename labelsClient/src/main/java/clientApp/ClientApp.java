@@ -2,9 +2,13 @@ package clientApp;
 
 import cn.labels.contract.ElasticityReplyGrpc;
 import cn.labels.contract.LabelsServiceGrpc;
+import com.google.protobuf.compiler.PluginProtos;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Scanner;
 
 public class ClientApp {
@@ -38,9 +42,10 @@ public class ClientApp {
             while (true) {
                 try {
                     int option = menu();
+                    Scanner scanner = new Scanner(System.in);
                     switch (option) {
                         case 1 :
-                            submitImage(username); break;
+                            submitImage(scanner); break;
                         case 2 :
                             unsubscribe(username); break;
                         case 3 :
@@ -81,5 +86,19 @@ public class ClientApp {
             op = scan.nextInt();
         } while (!((op >= 1 && op <= 5) || op == 99));
         return op;
+    }
+
+    private static void submitImage(Scanner sc){
+        try{
+            System.out.println("Caminho da imagem");
+            String imagePath = sc.nextLine();
+
+            Path path = Path.of(imagePath);
+
+            if(!Files.exists(path))
+                System.out.println("Ficheiro não encontrado!");
+
+
+        }
     }
 }
