@@ -18,6 +18,8 @@ public class ClientApp {
     private static LabelsServiceGrpc.LabelsServiceBlockingStub blockingStub;
     private static LabelsServiceGrpc.LabelsServiceStub noBlockStub; //usar para chamadas em que o cliente não fica à espera da resposta imediatamente
 
+    private static ElasticityReplyGrpc.ElasticityReplyBlockingStub elasticityBlockingStub;
+
     static void main(String[] args) {
         try {
             if (args.length == 2) {
@@ -50,7 +52,9 @@ public class ClientApp {
                         case 3 :
                             namesByDate(scanner); break;
                         case 4 :
-                            listTopics(); break;
+                            changeInstances(scanner); break;
+                        case 5:
+                            changeInstancesForImages(scanner);
                         case 99 :
                             channel.shutdown();
                             System.exit(0);
@@ -194,12 +198,66 @@ public class ClientApp {
 
             System.out.println("Ficheiros armazenados no sistema:");
             for(ImageSummary is : reply.getImagesList()){
-                System.out.println("");
+                System.out.println("ID do pedido: " + is.getRequestId());
+                System.out.println("Nome do ficheiro: " + is.getFileName());
+                System.out.println("Nome do bucket: " + is.getBucketName());
+                System.out.println("Nome do blob: " + is.getBlobName());
+                System.out.println("Processado em: "+ is.getProcessedAt());
+
+                System.out.println("Labels: ");
+                for(LabelInfo li : is.getLabelsList()){
+                    System.out.println("Label em inglês: " + li.getLabelEn() + " - Label em português: " + li.getLabelPt() + " - Nível de confiança: " + li.getConfidence());
+                }
             }
 
         } catch (Exception e) {
             System.out.println("Erro: " + e.getMessage());
         }
+    }
+
+    private static void changeInstances(Scanner sc){
+        try{
+            resizeReply reply = elasticityBlockingStub.changeInstances(scanInfo(sc));
+
+            System.out.println("Resultado: " + reply.getSuccess());
+            System.out.println("Mensagem: " + reply.getMessage());
+
+        } catch (Exception e) {
+            System.out.println("Erro: " + e.getMessage());
+        }
+    }
+
+    private static void changeInstancesForImages(Scanner sc){
+        try{
+            resizeReply reply = elasticityBlockingStub.changeInstancesForImages(scanInfo(sc));
+
+            System.out.println("Resultado: " + reply.getSuccess());
+            System.out.println("Mensagem: " + reply.getMessage());
+        }
+        catch(Exception e){
+            System.out.println("Erro: " + e.getMessage());
+        }
+    }
+
+    private static resizeRequest scanInfo(Scanner sc){
+        System.out.println("ID do projeto: ");
+        String projectId = sc.nextLine();
+
+        System.out.println("Zona: ");
+        String zone = sc.nextLine();
+
+        System.out.println("Nome do group instance: ");
+        String instanceGroupName = sc.nextLine();
+
+        System.out.println("Novo tamanho: ");
+        int newSize = Integer.parseInt(sc.nextLine());
+
+        return resizeRequest.newBuilder()
+                .setProjectId(projectId)
+                .setZone(zone)
+                .setInstanceGroupName(instanceGroupName)
+                .setNewSize(newSize)
+                .build();
     }
 
 }
