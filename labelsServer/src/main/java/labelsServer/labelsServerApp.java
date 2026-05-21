@@ -1,5 +1,25 @@
 package labelsServer;
 
-public class labelsServerApp {
+import io.grpc.ServerBuilder;
 
+import java.io.IOException;
+
+public class labelsServerApp {
+    private static int svcPort = 8000;
+
+    static void main(String[] args) throws InterruptedException, IOException {
+        io.grpc.Server svc = ServerBuilder.forPort(svcPort)
+                // Add one or more services.
+                // The Server can host many services in same TCP/IP port
+                .addService(new labelsServiceImplementation())
+                .addService(new elasticityServiceImplementation())
+                .build();
+        svc.start();
+        System.out.println("Server started on port " + svcPort);
+        // Java virtual machine shutdown hook
+        // to capture normal or abnormal exits
+        Runtime.getRuntime().addShutdownHook(new ShutdownHook(svc));
+        // Waits for the server to become terminated
+        svc.awaitTermination();
+    }
 }

@@ -12,7 +12,7 @@ service LabelsService{
     rpc namesByDate(namesByDateRequest) returns (namesByDateReply);
 }
 
-service ElasticityReply{
+service ElasticityService{
     rpc changeInstances(resizeRequest) returns (resizeReply);
     rpc changeInstancesForImages(resizeRequest) returns (resizeReply);
 }

@@ -18,9 +18,9 @@ public class ClientApp {
     private static LabelsServiceGrpc.LabelsServiceBlockingStub blockingStub;
     private static LabelsServiceGrpc.LabelsServiceStub noBlockStub; //usar para chamadas em que o cliente não fica à espera da resposta imediatamente
 
-    private static ElasticityReplyGrpc.ElasticityReplyBlockingStub elasticityBlockingStub;
+    private static ElasticityServiceGrpc.ElasticityServiceBlockingStub elasticityBlockingStub;
 
-    static void main(String[] args) {
+    public static void main(String[] args) {
         try {
             if (args.length == 2) {
                 svcIP = args[0];
@@ -36,6 +36,7 @@ public class ClientApp {
             blockingStub = LabelsServiceGrpc.newBlockingStub(channel);
             noBlockStub = LabelsServiceGrpc.newStub(channel);
 
+            elasticityBlockingStub = ElasticityServiceGrpc.newBlockingStub(channel);
             /*Scanner sc = new Scanner(System.in); //usar scanner para obter o username a ser registado
             System.out.print("Username: ");
             String username = sc.nextLine();*/
@@ -54,7 +55,7 @@ public class ClientApp {
                         case 4 :
                             changeInstances(scanner); break;
                         case 5:
-                            changeInstancesForImages(scanner);
+                            changeInstancesForImages(scanner); break;
                         case 99 :
                             channel.shutdown();
                             System.exit(0);
@@ -126,6 +127,7 @@ public class ClientApp {
             byte[] allImageBytes = Files.readAllBytes(path); //transformar a imagem num array de bytes
             int blockSize = 64*1024; //blocos de 64KB
             String fileName = path.getFileName().toString();
+            String contentType = Files.probeContentType(path);
 
             for(int actSize = 0; actSize < allImageBytes.length; actSize += blockSize){
                 int length = Math.min(blockSize, allImageBytes.length - actSize); //caso o último bloco tenha menos de 64KB
@@ -133,6 +135,7 @@ public class ClientApp {
                 imageBlock block = imageBlock.newBuilder()
                         .setFileName(fileName)
                         .setData(ByteString.copyFrom(allImageBytes, actSize, length))//copiar X bytes para o imageBlock
+                        .setContentType(contentType)
                         .build();
                 requestObserver.onNext(block);
             }
