@@ -10,6 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class ClientApp {
 
@@ -32,7 +34,7 @@ public class ClientApp {
 
             try{
                 System.out.println("Processo de obtenção dos IP's das VM's gRPC");
-                List<String> ips = IpLookupFunctionClass.getExternalIps();
+                List<String> ips = IpLookupFunctionClass.getExternalIps("cn2526-t3-g12", "europe-west6-a", "lab-mig");
 
                 if(ips.isEmpty())
                     System.out.println("Nenhum ip encontrado, a usar: " + svcIP);
@@ -125,6 +127,8 @@ public class ClientApp {
             if(!Files.exists(path))
                 System.out.println("Ficheiro não encontrado!");
 
+            CountDownLatch latch = new CountDownLatch(1);
+
             StreamObserver<imageReply> responseObserver = new StreamObserver<>() {
                 @Override
                 public void onNext(imageReply reply) {
@@ -136,11 +140,13 @@ public class ClientApp {
                 @Override
                 public void onError(Throwable t) {
                     System.out.println("Erro na submissão da imagem: " + t.getMessage());
+                    latch.countDown();
                 }
 
                 @Override
                 public void onCompleted() {
                     System.out.println("Envio terminado");
+                    latch.countDown();
                 }
             }; //definição do que fazer quando o servidor me responder
 
@@ -164,6 +170,7 @@ public class ClientApp {
             }
 
             requestObserver.onCompleted();
+            latch.await(1, TimeUnit.MINUTES);
 
         }
         catch (Exception e) {

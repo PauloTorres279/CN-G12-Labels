@@ -16,8 +16,12 @@ import java.util.Map;
 public class IpLookupFunctionClass {
     private static final String ipLookupFunctionURL = "https://europe-west1-cn2526-t3-g12.cloudfunctions.net/ip-lookup";
 
-    public static List<String> getExternalIps() throws IOException {
-        URL url = new URL(ipLookupFunctionURL);
+    public static List<String> getExternalIps(String projectId, String zone, String instanceGroup) throws IOException {
+        String urlText = ipLookupFunctionURL
+                + "?project=" + projectId
+                + "&zone=" + zone
+                + "&instanceGroup=" + instanceGroup;
+        URL url = new URL(urlText);
 
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
