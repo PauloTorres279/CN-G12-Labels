@@ -13,7 +13,7 @@ public class labelsServiceImplementation extends LabelsServiceGrpc.LabelsService
 
     private static final String PROJECT_ID = "cn2526-t3-g12";
     private static final String BUCKET_NAME = "cn-labels-g12-t3-v2526";
-    private static final String TOPIC_ID = "labels-processing-topic";
+    private static final String TOPIC_ID = "labels-g12-topic";
 
     StorageOptions storageOptions = StorageOptions.getDefaultInstance();
     Storage storage = storageOptions.getService();

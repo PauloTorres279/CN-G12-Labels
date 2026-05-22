@@ -1,8 +1,9 @@
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
+import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.gson.Gson;
 import com.google.pubsub.v1.PubsubMessage;
 
-public class LabelsMessageReceiver {
+public class LabelsMessageReceiver implements MessageReceiver {
     private final Gson gson = new Gson();
     private final ImageProcessor processor = new ImageProcessor();
 
@@ -15,10 +16,15 @@ public class LabelsMessageReceiver {
 
             ProcessingRequest request = gson.fromJson(json, ProcessingRequest.class);
 
-            processor.processImage(reques);
+            processor.processImage(request);
+
+            consumer.ack();
+
+            System.out.println("Mensagem processada");
         }
         catch (Exception e){
             System.out.println("Erro: " + e.getMessage());
+            consumer.nack();
         }
     }
 }

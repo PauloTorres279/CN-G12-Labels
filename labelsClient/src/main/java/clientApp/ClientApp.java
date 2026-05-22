@@ -127,8 +127,6 @@ public class ClientApp {
             if(!Files.exists(path))
                 System.out.println("Ficheiro não encontrado!");
 
-            CountDownLatch latch = new CountDownLatch(1);
-
             StreamObserver<imageReply> responseObserver = new StreamObserver<>() {
                 @Override
                 public void onNext(imageReply reply) {
@@ -140,13 +138,11 @@ public class ClientApp {
                 @Override
                 public void onError(Throwable t) {
                     System.out.println("Erro na submissão da imagem: " + t.getMessage());
-                    latch.countDown();
                 }
 
                 @Override
                 public void onCompleted() {
                     System.out.println("Envio terminado");
-                    latch.countDown();
                 }
             }; //definição do que fazer quando o servidor me responder
 
@@ -170,7 +166,6 @@ public class ClientApp {
             }
 
             requestObserver.onCompleted();
-            latch.await(1, TimeUnit.MINUTES);
 
         }
         catch (Exception e) {

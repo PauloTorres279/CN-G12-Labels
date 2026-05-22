@@ -14,7 +14,7 @@ public class firestoreOperations {
     private final Firestore db;
 
     public firestoreOperations() {
-        this.db = FirestoreOptions.getDefaultInstance().getService();
+        this.db = FirestoreOptions.newBuilder().setDatabaseId("cn-t3g12-labels").build().getService();
     }
 
     public void createPendingRequest(
