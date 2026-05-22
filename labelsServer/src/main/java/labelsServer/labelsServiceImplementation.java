@@ -7,6 +7,7 @@ import io.grpc.stub.StreamObserver;
 
 import java.io.ByteArrayOutputStream;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 public class labelsServiceImplementation extends LabelsServiceGrpc.LabelsServiceImplBase {
 
@@ -19,6 +20,7 @@ public class labelsServiceImplementation extends LabelsServiceGrpc.LabelsService
 
 
     private final StorageOperations storageOperations = new StorageOperations(storage);
+    private final firestoreOperations firestoreOperations = new firestoreOperations();
 
     public StreamObserver<imageBlock> submitImage (StreamObserver<imageReply> responseObserver){
         return new StreamObserver<imageBlock>() {
@@ -59,6 +61,8 @@ public class labelsServiceImplementation extends LabelsServiceGrpc.LabelsService
 
                     storageOperations.uploadBlobToBucket(BUCKET_NAME, blobName, contentType, completeImage); //armazenar a imagem no cloud storage
 
+                    firestoreOperations.createPendingRequest(requestId, fileName, BUCKET_NAME, blobName);
+
                     PubSubPublisher.pubSubRequest(PROJECT_ID, TOPIC_ID, requestId, BUCKET_NAME, blobName); //enviar uma mensagem para o topico Pub/Sub para as apps de processamento de imagens
 
                     imageReply reply = imageReply
@@ -79,7 +83,26 @@ public class labelsServiceImplementation extends LabelsServiceGrpc.LabelsService
     }
 
     public void imageInfo(imageInfoRequest request, StreamObserver<imageInfoReply> responseObserver){
+        try{
+            imageInfoReply reply = firestoreOperations.getImageInfo(request.getRequestId());
 
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        }
+        catch (Exception e){
+            System.out.println("Erro: " + e.getMessage());
+        }
     }
 
+    public void namesByDate(namesByDateRequest request, StreamObserver<namesByDateReply> responseObserver){
+        try{
+            namesByDateReply reply = firestoreOperations.getNamesByDate(request.getLabel(), request.getStartDate(), request.getEndDate());
+
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        }
+        catch (Exception e){
+            System.out.println("Erro: " + e.getMessage());
+        }
+    }
 }

@@ -8,6 +8,7 @@ import io.grpc.stub.StreamObserver;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Scanner;
 
 public class ClientApp {
@@ -27,7 +28,29 @@ public class ClientApp {
                 svcPort = Integer.parseInt(args[1]);
             }
 
-            System.out.println("connect to " + svcIP + ":" + svcPort);
+            Scanner ipScanner = new Scanner(System.in);
+
+            try{
+                System.out.println("Processo de obtenção dos IP's das VM's gRPC");
+                List<String> ips = IpLookupFunctionClass.getExternalIps();
+
+                if(ips.isEmpty())
+                    System.out.println("Nenhum ip encontrado, a usar: " + svcIP);
+                else{
+                    System.out.println("Lista de servidores disponíveis: ");
+                    for (int i = 0; i < ips.size();i++){
+                        System.out.println((i+1) + "-" + ips.get(i));
+                    }
+
+                    System.out.println("Escolha o servidor: ");
+                    int option = Integer.parseInt(ipScanner.nextLine());
+
+                    svcIP = ips.get(option-1);
+                }
+            } catch (Exception e) {
+                System.out.println("Erro na inicialização do serviço de IP Lookup");
+                System.out.println("A utilizar: " + svcIP);
+            }
 
             ManagedChannel channel = ManagedChannelBuilder.forAddress(svcIP, svcPort)
                     .usePlaintext()

@@ -9,11 +9,11 @@ import com.google.cloud.firestore.*;
 import java.time.LocalDateTime;
 import java.util.*;
 
-public class FirestoreOperations {
+public class firestoreOperations {
 
     private final Firestore db;
 
-    public FirestoreOperations() {
+    public firestoreOperations() {
         this.db = FirestoreOptions.getDefaultInstance().getService();
     }
 
@@ -43,7 +43,7 @@ public class FirestoreOperations {
                 .set(doc)
                 .get();
 
-        System.out.println("Pedido criado no Firestore com estado PENDING.");
+        System.out.println("Pedido criado no Firestore");
     }
 
     public imageInfoReply getImageInfo(String requestId) throws Exception {
